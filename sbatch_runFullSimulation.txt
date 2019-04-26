@@ -1,0 +1,11 @@
+#!/bin/bash
+
+#SBATCH -n 2  #Number of cores
+
+#SBATCH -t 20  #Runtime in minutes
+
+#SBATCH -p stats #Partition to submit to
+
+#SBATCH --mem=3000 #Memory per node in MB (see also --mem-per-cpu)
+
+Rscript runScript.R ${INDEX_VAR1} ${INDEX_VAR2}
