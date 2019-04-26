@@ -2,7 +2,7 @@
 
 #SBATCH -n 2  #Number of cores
 
-#SBATCH -t 20  #Runtime in minutes
+#SBATCH -t 45  #Runtime in minutes
 
 #SBATCH -p stats #Partition to submit to
 
