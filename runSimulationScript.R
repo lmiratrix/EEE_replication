@@ -14,7 +14,8 @@ index <- as.numeric(as.character(Sys.getenv("INDEX_VAR1")))
 ################################
 ################################
 
-source( "")
+source( "simulation_single_trial.R" )
+
 #output to an RDS file (or a workspace); e.g.,
 saveRDS(object = rObject, file = "fileName.rds")
 #or

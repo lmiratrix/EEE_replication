@@ -57,10 +57,12 @@ rerandomize.data = function( dat ) {
 # @return Dataframe with the estimates along with the true baseline values.
 single.MLM.trial = function( n.bar, J, tau.11.star, dependence, proptx.dependence, variable.n, variable.p,
                              ATE.superpop = 0.2, n.runs = 3 ) {
-  df = gen.dat.no.cov( n.bar=n.bar, J=J,
+  
+  df = gen.dat.no.cov( n.bar=n.bar, 
+                       J=J,
                        tau.11.star = tau.11.star,
                        ICC = 0.20,
-                       p = 0.70,
+                       p = 0.65,
                        variable.n = TRUE,
                        variable.p = TRUE,
                        finite.model = FALSE,
@@ -168,14 +170,14 @@ if ( FALSE ) {
 
 make.scenario.list = function() {
   
-  scenarios = expand.grid( J = c( 80, 40, 20 ),
-                           n.bar = c( 8000, 4000, 2000 ), # put in totals here
+  scenarios = expand.grid( J = c( 40, 20, 10 ),
+                           n.bar = c( 8000, 4000, 1500 ), # put in totals here
                            dependence = c( 1, 0 ),
                            proptx.dependence = c( 1, 0, -1 ), 
                            variable.n = c( TRUE, FALSE ),
                            variable.p = c( TRUE, FALSE ),
-                           ATE = 0.2,
-                           tau = c( 0, 0.1, 0.2 )^2 )
+                           ATE = 0.10,
+                           tau = c( 0, 0.1, 0.20 )^2 )
   nrow( scenarios )
   
   # drop redundant scenarios (dependence irrelevant if quantaty not varying)
