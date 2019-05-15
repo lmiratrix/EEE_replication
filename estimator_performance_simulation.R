@@ -8,6 +8,8 @@
 
 source( "simulation_single_trial.R" )
 
+library( tibble )
+library( purrr )
 
 #SIZE_IMPACT_CORRELATE = FALSE
 #VARIABLE_P = FALSE
@@ -29,7 +31,7 @@ if ( !exists( "index" ) ) {
 }
 
 
-if ( !exists( "index" ) ) {
+if ( !exists( "index" ) || is.na( index ) ) {
   cat( "WARNING: In TEST mode for simulation script" )
   index = 41 # c( 41, 42 )
   FILENAME = "testing_simulation_results_" 
@@ -60,7 +62,7 @@ scat( "Running simulation %d\n", index )
 ptm = proc.time()
 
 # What simulation are we running?
-scenarios = get.scenario.by.id( "main", index )
+scenarios = get.scenario.by.id( index, "main" )
 scenarios
 
 scenarios$run = pmap( scenarios, run.scenario, R = NUM_TRIALS_PER_SCENARIO )
