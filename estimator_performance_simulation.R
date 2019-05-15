@@ -34,7 +34,7 @@ if ( !exists( "index" ) ) {
 if ( !exists( "index" ) || is.na( index ) ) {
   cat( "WARNING: In TEST mode for simulation script" )
   index = 41 # c( 41, 42 )
-  FILENAME = "testing_simulation_results_" 
+  FILENAME = "results/testing_simulation_results_" 
   
   NUM_TRIALS_PER_SCENARIO = 5
   
@@ -42,8 +42,8 @@ if ( !exists( "index" ) || is.na( index ) ) {
   SIM_PER_MINUTE = 7 # estimated
   
 } else {
-  FILENAME = "simulation_results_"
-  NUM_TRIALS_PER_SCENARIO = 100
+  FILENAME = "results/simulation_results_"
+  NUM_TRIALS_PER_SCENARIO = 20
 }
 
 
@@ -71,7 +71,10 @@ scat("**\n**\tTotal time elapsed:\n")
 tot.time = proc.time() - ptm
 print(tot.time)
 
-scat("Realized simulations per minute = %.2f\n", nrow( scenarios ) * NUM_TRIALS_PER_SCENARIO / (tot.time["elapsed"] / 60) )
+sim.per.min = sim.per.min = nrow( scenarios ) * NUM_TRIALS_PER_SCENARIO / (tot.time["elapsed"] / 60)
+
+scat("Realized simulations per minute = %.2f\n", sim.per.mind )
+scenarios$sim.per.min = sim.per.min
 
 scat( "**\n**")
 
@@ -91,7 +94,7 @@ scenarios = mutate( scenarios,
 scenarios = rename( scenarios, 
                     ATE.super.site = ATE )
 
-# Select relevant columns
+# Rearrange and foreground relevant columns
 scenarios = dplyr::select( scenarios, ID, J, n.bar, tau, dependence, ATE.super.site, ATE.super.person, everything() )
 scenarios
 
