@@ -5,7 +5,7 @@
 # This script runs a bunch of scenarios and saves the massive amount of results
 # to a file to be processed.
 
-library( tidyverse )
+library( dplyr )
 library( blkvar )
 
 
@@ -203,7 +203,7 @@ make.scenario.list = function() {
 }
 
 
-get.scenario.by.id = function( group = "main", index ) {
+get.scenario.by.id = function( index, group = "main" ) {
     scenarios = make.scenario.list()
     scenarios[ index, ]
 }

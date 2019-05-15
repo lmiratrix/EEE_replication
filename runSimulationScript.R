@@ -2,7 +2,6 @@
 #load necessary libraries
 #library(MASS)
 
-#NOTE THAT THERE ARE TWO GLOBAL VARIABLES FOR THE SBATCH SCRIPT:
 index <- as.numeric(as.character(Sys.getenv("INDEX_VAR1")))
 #INDEX_VAR2 <- as.numeric(as.character(Sys.getenv("INDEX_VAR2")))
 

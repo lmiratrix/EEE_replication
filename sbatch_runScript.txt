@@ -6,7 +6,7 @@
 
 #SBATCH -p stats #Partition to submit to
 
-#SBATCH --mem=30000 #Memory per node in MB (see also --mem-per-cpu)
+#SBATCH --mem=100 #Memory per node in MB (see also --mem-per-cpu)
 
 #R file to run, and txt files to produce for output and errors
-R --vanilla < runSimulationScript.R > runScript_output.txt 2> runScript_errors.txt
+R --vanilla < estimator_performance_simulation.R > runScript_output_%j.txt 2> runScript_errors_%j.txt
