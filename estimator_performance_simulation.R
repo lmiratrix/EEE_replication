@@ -43,7 +43,8 @@ if ( !exists( "index" ) || is.na( index ) ) {
   
 } else {
   FILENAME = "results/simulation_results_"
-  NUM_TRIALS_PER_SCENARIO = 20
+  
+  NUM_TRIALS_PER_SCENARIO = 1000
 }
 
 

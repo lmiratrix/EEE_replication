@@ -61,6 +61,7 @@ single.MLM.trial = function( n.bar, J, tau.11.star, dependence, proptx.dependenc
   df = gen.dat.no.cov( n.bar=n.bar, 
                        J=J,
                        tau.11.star = tau.11.star,
+                       gamma.10 = ATE.superpop,
                        ICC = 0.20,
                        p = 0.65,
                        variable.n = TRUE,
