@@ -8,6 +8,8 @@
 
 source( "simulation_single_trial.R" )
 
+group = "large"
+
 library( tibble )
 library( purrr )
 
@@ -43,7 +45,7 @@ if ( !exists( "index" ) || is.na( index ) ) {
   
 } else {
   FILENAME = "results/simulation_results_"
-  NUM_TRIALS_PER_SCENARIO = 20
+  NUM_TRIALS_PER_SCENARIO = 1000
 }
 
 
@@ -73,7 +75,7 @@ print(tot.time)
 
 sim.per.min = sim.per.min = nrow( scenarios ) * NUM_TRIALS_PER_SCENARIO / (tot.time["elapsed"] / 60)
 
-scat("Realized simulations per minute = %.2f\n", sim.per.mind )
+scat("Realized simulations per minute = %.2f\n", sim.per.min )
 scenarios$sim.per.min = sim.per.min
 
 scat( "**\n**")

@@ -56,13 +56,13 @@ rerandomize.data = function( dat ) {
 # calculate the true ATE (person and site weighted).
 # @return Dataframe with the estimates along with the true baseline values.
 single.MLM.trial = function( n.bar, J, tau.11.star, dependence, proptx.dependence, variable.n, variable.p,
-                             ATE.superpop = 0.2, n.runs = 3 ) {
+                             ATE.superpop = 0.2, ICC = 0.20, p.tx = 0.65, n.runs = 3 ) {
   
   df = gen.dat.no.cov( n.bar=n.bar, 
                        J=J,
                        tau.11.star = tau.11.star,
-                       ICC = 0.20,
-                       p = 0.65,
+                       ICC = ICC,
+                       p = p.tx,
                        variable.n = TRUE,
                        variable.p = TRUE,
                        finite.model = FALSE,
@@ -129,13 +129,24 @@ if ( FALSE ) {
 
 
 # Run a simulation with R trials and return all the simulation runs as a large dataframe.
-run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, ATE, R ) {
+run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, ATE, ICC, p.tx, R ) {
   ptm = proc.time()
-  scat( "Running J=%d\tn.bar=%d\ttau=%.2f\tATE=%.2f\tdependence=%s\tprop dep=%s\tR=%d\n", J, n.bar,tau, ATE, dependence, proptx.dependence, R)
-  rps = plyr::rdply( R,  single.MLM.trial( n.bar=n.bar, J=J, tau.11.star=tau, 
+
+#  n = n.bar * J
+#  e.time = 1.13^(J/5) + 1.0183^(n/100)
+  
+#  R.adj = round( R * pmin( 1, 3/e.time ) )
+   if ( J > 40 ) {
+      R.adj = R / 2
+   } else {
+     R.adj = R
+     }
+
+  scat( "Running J=%d\tn.bar=%d\ttau=%.2f\tATE=%.2f\tICC=%.2f\tprop tx=%.2f\tdependence=%s\tprop dep=%s\tR=%d (%d)\n", J, n.bar,tau, ATE, ICC, p.tx, dependence, proptx.dependence, R.adj, R)
+  rps = plyr::rdply( R.adj,  single.MLM.trial( n.bar=n.bar, J=J, tau.11.star=tau, 
                                            dependence = dependence, proptx.dependence = proptx.dependence,
                                            variable.n = variable.n, variable.p = variable.p,
-                                           ATE.superpop=ATE ),
+                                           ATE.superpop=ATE, ICC=ICC, p.tx=p.tx ),
                      .id="run", .progress="text" )
   rps$subrun = paste0( rps$run, ".", rps$subrun )
   
@@ -168,8 +179,9 @@ if ( FALSE ) {
 
 #### Make scenario configurations #####
 
-make.scenario.list = function() {
+make.scenario.list = function( group = "main" ) {
   
+if ( group == "main" ) {
   scenarios = expand.grid( J = c( 40, 20, 10 ),
                            n.bar = c( 8000, 4000, 1500 ), # put in totals here
                            dependence = c( 1, 0 ),
@@ -177,7 +189,22 @@ make.scenario.list = function() {
                            variable.n = c( TRUE, FALSE ),
                            variable.p = c( TRUE, FALSE ),
                            ATE = 0.10,
-                           tau = c( 0, 0.1, 0.20 )^2 )
+                           tau = c( 0, 0.1, 0.20 )^2,
+			   p.tx = 0.65,
+			   ICC = 0.20 )
+} else if ( simstudy == "large" ) {
+  scenarios = expand.grid( J = c( 80, 40, 20 ),
+                           n.bar = c( 8000, 4000, 2000 ), # put in totals here
+                           dependence = c( 1, 0 ),
+                           proptx.dependence = c( 1, 0, -1 ), 
+                           variable.n = c( TRUE, FALSE ),
+                           variable.p = c( TRUE, FALSE ),
+                           ATE = 0.10,
+                           tau = c( 0, 0.1, 0.20 )^2,
+			   p.tx = 0.70,
+			   ICC = 0.60 )
+}
+
   nrow( scenarios )
   
   # drop redundant scenarios (dependence irrelevant if quantaty not varying)
@@ -206,7 +233,7 @@ make.scenario.list = function() {
 
 
 get.scenario.by.id = function( index, group = "main" ) {
-    scenarios = make.scenario.list()
+    scenarios = make.scenario.list( group=group )
     scenarios[ index, ]
 }
 
