@@ -8,6 +8,8 @@
 
 source( "simulation_single_trial.R" )
 
+group = "large"
+
 library( tibble )
 library( purrr )
 
@@ -43,7 +45,7 @@ if ( !exists( "index" ) || is.na( index ) ) {
   
 } else {
   FILENAME = "results/simulation_results_"
-  
+
   NUM_TRIALS_PER_SCENARIO = 1000
 }
 
@@ -63,7 +65,7 @@ scat( "Running simulation %d\n", index )
 ptm = proc.time()
 
 # What simulation are we running?
-scenarios = get.scenario.by.id( index, "main" )
+scenarios = get.scenario.by.id( index, group=group )
 scenarios
 
 scenarios$run = pmap( scenarios, run.scenario, R = NUM_TRIALS_PER_SCENARIO )
@@ -74,7 +76,7 @@ print(tot.time)
 
 sim.per.min = sim.per.min = nrow( scenarios ) * NUM_TRIALS_PER_SCENARIO / (tot.time["elapsed"] / 60)
 
-scat("Realized simulations per minute = %.2f\n", sim.per.mind )
+scat("Realized simulations per minute = %.2f\n", sim.per.min )
 scenarios$sim.per.min = sim.per.min
 
 scat( "**\n**")

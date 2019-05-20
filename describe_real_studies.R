@@ -1,6 +1,7 @@
 
 
-# Explore existing statistics to get our simulation parameters
+# Explore existing statistics to try and figure out what reasonable simulation
+# parameters might be.
 
 source( "simulation_single_trial.R" )
 
@@ -11,12 +12,11 @@ head( dat )
 
 
 mosaic::favstats( dat$N )
-
-
-mosaic::favstats( dat$Number_of_sites )
-
+range( dat$N )
 
 mosaic::favstats( dat$Number_of_sites )
+range( dat$Number_of_sites )
+
 
 
 wb = loadWorkbook( "../Cross Study Stats/Xstudy_Stats_And_Estimates190421.xlsx" )
@@ -32,6 +32,9 @@ table( dat3$model )
 dat3 = filter( dat3, model=="FIRC, block" )
 nrow( dat3 )
 
+
+#### Calculating some fixed parameters for simulations ####
+
 # Based on this, we set ICC=0.20
 mosaic::favstats( dat3$ICC )
 
@@ -40,100 +43,98 @@ mosaic::favstats( pmax( 1 - dat3$Mean_PT_site,  dat3$Mean_PT_site ) )
 
 # Cross site variation of 0, 0.10, and 0.20 seems reasonable
 mosaic::favstats( sqrt( dat3$X_site_variation ) )
+qplot( sqrt( dat3$X_site_variation  ) )
 
+# How much variation in site size vs. site size
 mosaic::favstats( dat3$SD_site_size / dat3$Avg_site_size )
+
+
 
 
 #### Look at what our simulation studies generate #####
 
-describe.data = function( n.bar, J, tau.11.star, dependence, proptx.dependence, variable.n, variable.p,
-                             ATE.superpop = 0.2, n.runs = 3 ) {
-  
-  df = gen.dat.no.cov( n.bar=n.bar, J=J,
-                       tau.11.star = tau.11.star,
-                       ICC = 0.20,
-                       p = 0.65,
-                       variable.n = TRUE,
-                       variable.p = TRUE,
-                       finite.model = FALSE,
-                       size.impact.correlate = dependence,
-                       proptx.impact.correlate = proptx.dependence,
-                       correlate.strength = 0.5 )
-  
-  tau.S = attr( df, "tau.S")
-  
-  df = rerandomize.data( df )
-  
-  params = df %>% group_by( sid ) %>%
-    summarise( ATE = mean( Y1 ) - mean( Y0 ),
-               n = n(),
-               ATE.hat = mean( Y1[Z==1] ) - mean( Y0[Z==0] ),
-               p = mean( Z == 1 ) )
-  
-  ATE.person = with( df, mean( Y1 - Y0 ) )
-  
-  
-  sstat = params %>% summarise( ATE.site = mean( ATE ),
-                                sd.n = sd( n ),
-                                sd.p = sd( p ),
-                                cor.p.Bhat = cor( ATE.hat, p ),
-                                cor.n.Bhat = cor( ATE.hat, n ),
-                                cor.p = cor( ATE, p ),
-                                cor.n = cor( ATE, n ) )
 
-  sstat = mutate( sstat,
-                 ATE.finite.person=ATE.person )
-  sstat
-}
 
+
+##
+## Summarize DGP for all the scenarios
+##
+
+source( "simulation_single_trial.R" )
 
 scenarios = make.scenario.list()
 scenarios
 
-scenarios$run = pmap( scenarios, describe.data )
+single.MLM.trial( 200, 20, 0.20^2, FALSE, FALSE, FALSE, FALSE, just.describe.data = TRUE )
+
+scenarios$run = pmap( scenarios, single.MLM.trial, just.describe.data = TRUE )
 
 
 scenarios = unnest(scenarios)
 head( scenarios )
+table( scenarios$proptx.dependence )
+
+
+## Look at estimated correlations with prop txed in site
+
+summary( scenarios$cor.p.Bhat )
 
 ggplot( scenarios, aes( proptx.dependence, cor.p.Bhat ) ) +
-  facet_wrap( ~ tau ) +
+  facet_grid(.  ~ tau, labeller = label_both) +
   geom_point()
 
+scenarios %>% filter( !is.na( cor.p.Bhat ) ) %>%
+  group_by( proptx.dependence, tau ) %>% 
+  summarise( mn.cor.hat = mean( cor.p.Bhat ),
+             sd.cor.hat = sd( cor.p.Bhat ),
+             mn.cor = mean( cor.p ),
+             sd.cor = sd( cor.p ) )
 
-ggplot( scenarios, aes( proptx.dependence, cor.n.Bhat ) ) +
-  facet_wrap( ~ tau ) +
-  geom_point()
 
-aa =scenarios %>% group_by( tau, dependence, proptx.dependence ) %>%
-  summarise( mean.corr.p.hat = mean( cor.p.Bhat ),
+
+aa = scenarios %>% filter( !is.na( cor.p.Bhat ), !is.na( cor.n.Bhat ) ) %>%
+  group_by( tau, dependence, proptx.dependence ) %>%
+  summarise( mn.corr.p.hat = mean( cor.p.Bhat ),
              sd.corr.p.hat = sd( cor.p.Bhat ),
-             mean.corr.n.hat = mean( cor.n.Bhat ),
+             mn.corr.n.hat = mean( cor.n.Bhat ),
              sd.corr.n.hat = sd( cor.n.Bhat ),
-             mean.corr.p = mean( cor.p ),
-             mean.corr.n = mean( cor.n ),
-             var.site = mean( sd.n / n.bar ) )
+             mn.corr.p = mean( cor.p ),
+             mn.corr.n = mean( cor.n ),
+             site.rat = mean( sd.n^2 / n.bar^2 ) )
 
 aa
 
-ggplot( aa, aes( proptx.dependence, mean.corr.p.hat ) ) +
+
+ggplot( aa, aes( proptx.dependence, mn.corr.p.hat ) ) +
   facet_grid( tau ~ dependence, labeller = label_both ) +
   geom_point() + geom_hline( yintercept= 0 )
 
 
 
-aa = scenarios %>%  summarise(  var.site = mean( sd.n / n.bar ) )
-mosaic::fav_stats( scenarios$sd.n / scenarios$n.bar )
+#### Comparing variability of site size  #####
+
+# Our scenarios
+aa = scenarios %>% summarise(  var.site = mean( sd.n / n.bar ) ) %>% filter( var.site > 0 )
 aa
+nzro = filter( scenarios, sd.n > 0 )
+mosaic::fav_stats( nzro$sd.n / nzro$n.bar )
+qplot( nzro$sd.n / nzro$n.bar )
+
+
+# The truth
 mosaic::favstats( dat3$SD_site_size / dat3$Avg_site_size )
 qplot(  dat3$SD_site_size / dat3$Avg_site_size )
+
+# in variance.  We are going with a ratio of 0.60 due to this.
+mosaic::favstats( dat3$SD_site_size^2 / dat3$Avg_site_size^2 )
 
 
 dplyr::select( dat3, outcome, N, Avg_site_size, SD_site_size )
 qplot( N, Avg_site_size, data=filter( dat3, N < 20000 ) ) +
   geom_smooth( method="lm" )
 
-dplyr::select( scenarios, n.bar, sd.n )
-qplot( n.bar, sd.n, data=scenarios ) +
+sss = dplyr::select( filter( scenarios, sd.n > 0 ), n.bar, sd.n )
+sss
+qplot( n.bar, sd.n, data=sss ) +
   geom_smooth( method="lm" )
 
