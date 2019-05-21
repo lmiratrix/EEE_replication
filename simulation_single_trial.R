@@ -189,18 +189,20 @@ if ( FALSE ) {
 
 
 # Run a simulation with R trials and return all the simulation runs as a large dataframe.
-run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, ATE, ICC, p.tx, R ) {
+run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, ATE, ICC, p.tx, R, ID=NULL ) {
   ptm = proc.time()
   
   #  n = n.bar * J
   #  e.time = 1.13^(J/5) + 1.0183^(n/100)
   
   #  R.adj = round( R * pmin( 1, 3/e.time ) )
-  if ( J > 40 ) {
-    R.adj = R / 2
-  } else {
-    R.adj = R
-  }
+  #if ( J > 40 ) {
+  #  R.adj = R / 2
+  #} else {
+  #  R.adj = R
+  #}
+  R.adj = R
+  
   
   scat( "Running J=%d\tn.bar=%d\ttau=%.2f\tATE=%.2f\tICC=%.2f\tprop tx=%.2f\tdependence=%s\tprop dep=%s\tR=%d (%d)\n", J, n.bar,tau, ATE, ICC, p.tx, dependence, proptx.dependence, R.adj, R)
   rps = plyr::rdply( R.adj,  single.MLM.trial( n.bar=n.bar, J=J, tau.11.star=tau, 
@@ -242,8 +244,8 @@ if ( FALSE ) {
 make.scenario.list = function( group = "main" ) {
   
   if ( group == "main" ) {
-    scenarios = expand.grid( J = c( 40, 20, 10 ),
-                             n.bar = c( 8000, 4000, 1500 ), # put in totals here
+    scenarios = expand.grid( J = c( 80, 40, 20, 10 ),
+                             n.bar = c( 8000, 4000, 2000 ), # put in totals here
                              dependence = c( 1, 0 ),
                              proptx.dependence = c( 1, 0, -1 ), 
                              variable.n = c( TRUE, FALSE ),
@@ -287,6 +289,8 @@ make.scenario.list = function( group = "main" ) {
   scenarios = as.tibble( scenarios )
   scenarios
   nrow( scenarios )
+  
+  scenarios$ID = 1:nrow( scenarios )
   
   scenarios  
 }

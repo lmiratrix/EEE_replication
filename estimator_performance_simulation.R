@@ -8,7 +8,7 @@
 
 source( "simulation_single_trial.R" )
 
-group = "large"
+group = "main"
 
 library( tibble )
 library( purrr )
@@ -35,18 +35,19 @@ if ( !exists( "index" ) ) {
 
 if ( !exists( "index" ) || is.na( index ) ) {
   cat( "WARNING: In TEST mode for simulation script" )
-  index = 41 # c( 41, 42 )
+  TESTING = TRUE
+  index = 0 # c( 41, 42 )
   FILENAME = "results/testing_simulation_results_" 
   
-  NUM_TRIALS_PER_SCENARIO = 5
+  APPROX_NUM_TRIALS_PER_RUN = 20
   
-  
-  SIM_PER_MINUTE = 7 # estimated
   
 } else {
+  TESTING = FALSE
   FILENAME = "results/simulation_results_"
 
-  NUM_TRIALS_PER_SCENARIO = 1000
+  #NUM_TRIALS_PER_SCENARIO = 1000
+  APPROX_NUM_TRIALS_PER_RUN = 1000
 }
 
 
@@ -60,13 +61,22 @@ make.file.name = function( index ) {
 
 ##### Set up simulation factors and run simulation #####
 
-scat( "Running simulation %d\n", index )
+scat( "Running simulation job %d\n", index )
 
 ptm = proc.time()
 
 # What simulation are we running?
-scenarios = get.scenario.by.id( index, group=group )
+#scenarios = get.scenario.by.id( index, group=group )
+scenarios = make.scenario.list( group=group )
+
 scenarios
+
+if ( TESTING ) {
+  scenarios = scenarios[1:5,]
+}
+
+NUM_TRIALS_PER_SCENARIO = round( APPROX_NUM_TRIALS_PER_RUN / nrow( scenarios ) )
+scat( "Running %d trials per scenario\n", NUM_TRIALS_PER_SCENARIO )
 
 scenarios$run = pmap( scenarios, run.scenario, R = NUM_TRIALS_PER_SCENARIO )
 
@@ -76,6 +86,7 @@ print(tot.time)
 
 sim.per.min = sim.per.min = nrow( scenarios ) * NUM_TRIALS_PER_SCENARIO / (tot.time["elapsed"] / 60)
 
+scat( "Num trials / scenario = %d with %d scenarios = %d runs\n", NUM_TRIALS_PER_SCENARIO, nrow( scenarios ), NUM_TRIALS_PER_SCENARIO * nrow( scenarios ) )
 scat("Realized simulations per minute = %.2f\n", sim.per.min )
 scenarios$sim.per.min = sim.per.min
 
@@ -85,7 +96,7 @@ scat( "**\n**")
 
 #### Clean up the simulation results a wee bit ####
 
-scenarios$ID = index
+#scenarios$ID = index
 
 # Rearrange columns to be nice
 scenarios = dplyr::select( scenarios, ID, everything() )
