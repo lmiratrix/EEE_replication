@@ -7,6 +7,7 @@
 library( tidyverse )
 library( blkvar )
 
+R = 100
 
 scat = function( str, ... ) {
   cat( sprintf( str, ... ) )
@@ -108,7 +109,6 @@ run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.
                                            variable.n = variable.n, variable.p = variable.p,
                                            ATE.superpop=ATE, ICC=ICC, p.tx=p.tx, ... ),
                      .id="run", .progress="text" )
-  rps$subrun = paste0( rps$run, ".", rps$subrun )
   
   scat("**\n**\tTotal time elapsed:\n")
   tot.time = proc.time() - ptm
@@ -124,14 +124,19 @@ lmsim = expand.grid( J = c( 10, 20, 30, 40, 50 ), tau=c(0,0.2^2) )
 
 lmsim$run = pmap( lmsim, run.scenario, 
                       n.bar = 100, dependence = 0, proptx.dependence = 0, variable.n = TRUE, variable.p = TRUE, 
-                      include.MLM=FALSE, include.block=FALSE, R = 100 )
+                      include.MLM=FALSE, include.block=FALSE, R = R )
 
 lmsim = unnest( lmsim )
 
 head( lmsim )
 table( lmsim$method )
 
-# Look at club sandwich
+lmsim = rename( lmsim, ATE.hat = tau1, SE.hat = SE )
+lmsim.full = lmsim
+
+lmsim = filter( lmsim, method %in% c( "FE-CR", "FE-Club" ) )
+
+# Look at club sandwich, etc.
 rst = lmsim %>% group_by( method, J, tau ) %>% 
   summarise( E.ATE.hat = mean( ATE.hat ),
              SE = sd( ATE.hat ),
@@ -159,4 +164,18 @@ ggplot( rst, aes( J, rat, col=method ) ) +
 ggplot( rst, aes( J, sd.SE.hat, col=method ) ) +
   facet_wrap( ~ tau ) +
   geom_point() + geom_line()
+
+
+
+### Compare Club vs. CR
+head( lmsim )
+ll = spread( lmsim, method, SE.hat )
+head( ll )
+ll$club.rat = ll$`FE-CR` / ll$`FE-Club`
+
+rst.2 = ll %>% group_by( J, tau ) %>% summarise( club.rat = mean( club.rat ) )
+ggplot( rst.2, aes( J, club.rat ) ) +
+  facet_wrap( ~ tau ) +
+  geom_point() + geom_line() +
+  geom_hline( yintercept= 1.0 )
 
