@@ -87,7 +87,8 @@ single.MLM.trial = function( n.bar, J, tau.11.star, dependence = FALSE, proptx.d
                        correlate.strength = 0.50,
                        size.ratio = 0.60 )
   
-  my.fixed.effect.estimators( Yobs, Z, sid, df)
+  #my.fixed.effect.estimators( Yobs, Z, sid, df)
+  blkvar:::fixed.effect.estimators( Yobs, Z, sid, data=df)
 }
 
 
@@ -98,7 +99,7 @@ single.MLM.trial = function( n.bar, J, tau.11.star, dependence = FALSE, proptx.d
 run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, ATE = 0.20, ICC = 0.20, p.tx = 0.65, R = 10, ID=NULL, ... ) {
   ptm = proc.time()
   
-  scat( "Running J=%d\tn.bar=%d\ttau=%.2f\tATE=%.2f\tICC=%.2f\n\tprop tx=%.2f\tdependence=%s\tprop dep=%s\tR=%d (%d)\n", 
+  scat( "Running J=%d\tn.bar=%d\ttau=%.2f\tATE=%.2f\tICC=%.2f\n\tprop tx=%.2f\tdependence=%s\tprop dep=%s\tR=%d\n", 
         J, n.bar,tau, ATE, ICC, p.tx,
         dependence, proptx.dependence, R)
   
