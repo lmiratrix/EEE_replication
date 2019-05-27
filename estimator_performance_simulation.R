@@ -7,7 +7,7 @@
 
 
 source( "simulation_single_trial.R" )
-
+library( multi)
 group = "main"
 
 library( tibble )
@@ -34,7 +34,7 @@ if ( !exists( "index" ) ) {
 
 
 if ( !exists( "index" ) || is.na( index ) ) {
-  cat( "WARNING: In TEST mode for simulation script" )
+  cat( "WARNING: In TEST mode for simulation script\n" )
   TESTING = TRUE
   index = 0 # c( 41, 42 )
   FILENAME = "results/testing_simulation_results_" 
@@ -74,6 +74,9 @@ scenarios
 if ( TESTING ) {
   scenarios = scenarios[1:5,]
 }
+
+
+#### Run the simulation ####
 
 NUM_TRIALS_PER_SCENARIO = round( APPROX_NUM_TRIALS_PER_RUN / nrow( scenarios ) )
 scat( "Running %d trials per scenario\n", NUM_TRIALS_PER_SCENARIO )
