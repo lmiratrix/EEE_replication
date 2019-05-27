@@ -6,8 +6,8 @@
 # to a file to be processed.
 
 
-source( "simulation_single_trial.R" )
-library( multi)
+source( "simulation_support_code.R" )
+
 group = "main"
 
 library( tibble )
