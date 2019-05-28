@@ -1,6 +1,6 @@
 export R_LIBS_USER=$HOME/apps/R:$R_LIBS_USER
 
-for INDEX_VAR in $(seq 1 252); do
+for INDEX_VAR in $(seq 1001 1500); do
 
   #print out indexes
   echo "${INDEX_VAR}"

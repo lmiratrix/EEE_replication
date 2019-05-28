@@ -6,6 +6,10 @@
 # to a file to be processed.
 
 
+# clear workspace
+rm(list=ls())
+
+
 source( "simulation_support_code.R" )
 
 group = "main"
@@ -18,13 +22,20 @@ library( purrr )
 
 
 
+if ( exists( "index" ) ) {
+   scat( "Warning: Index already set!  Set to:\n" )
+   print( index )
+   rm( index )
+}
+
+
 # First try to get command line argument
 args = commandArgs( trailingOnly = TRUE )
 cat( "Command line arguments:\n" )
 cat(args, sep = "\n")
 if ( length( args ) > 0 ) {
   index = as.numeric( args[[1]] )
-  scat( "Retrieved index from command line: %d\n", index )
+  scat( "Retrieved (and possibly overrode) index from command line: %d\n", index )
 }
 
 if ( !exists( "index" ) ) {
@@ -39,15 +50,19 @@ if ( !exists( "index" ) || is.na( index ) ) {
   index = 0 # c( 41, 42 )
   FILENAME = "results/testing_simulation_results_" 
   
-  APPROX_NUM_TRIALS_PER_RUN = 20
-  
+  #  APPROX_NUM_TRIALS_PER_RUN = 20
+  NUM_TRIALS_PER_SCENARIO = 2  
   
 } else {
+  cat( "Not testing, setting file names and approx num trials\n" )
+
   TESTING = FALSE
   FILENAME = "results/simulation_results_"
 
-  #NUM_TRIALS_PER_SCENARIO = 1000
-  APPROX_NUM_TRIALS_PER_RUN = 1000
+  NUM_TRIALS_PER_SCENARIO = 4
+  #APPROX_NUM_TRIALS_PER_RUN = 700
+  #NUM_TRIALS_PER_RUN = 4
+
 }
 
 
@@ -78,7 +93,7 @@ if ( TESTING ) {
 
 #### Run the simulation ####
 
-NUM_TRIALS_PER_SCENARIO = round( APPROX_NUM_TRIALS_PER_RUN / nrow( scenarios ) )
+#NUM_TRIALS_PER_SCENARIO = round( APPROX_NUM_TRIALS_PER_RUN / nrow( scenarios ) )
 scat( "Running %d trials per scenario\n", NUM_TRIALS_PER_SCENARIO )
 
 scenarios$run = pmap( scenarios, run.scenario, R = NUM_TRIALS_PER_SCENARIO )
@@ -91,7 +106,8 @@ sim.per.min = sim.per.min = nrow( scenarios ) * NUM_TRIALS_PER_SCENARIO / (tot.t
 
 scat( "Num trials / scenario = %d with %d scenarios = %d runs\n", NUM_TRIALS_PER_SCENARIO, nrow( scenarios ), NUM_TRIALS_PER_SCENARIO * nrow( scenarios ) )
 scat("Realized simulations per minute = %.2f\n", sim.per.min )
-scenarios$sim.per.min = sim.per.min
+# scenarios$sim.per.min = sim.per.min
+
 
 scat( "**\n**")
 

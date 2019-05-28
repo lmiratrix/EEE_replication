@@ -2,11 +2,12 @@
 
 #SBATCH -n 1  #Number of cores
 
-#SBATCH -t 265  #Runtime in minutes
+#SBATCH -t 220  #Runtime in minutes
 
 #SBATCH -p stats #Partition to submit to
 
 #SBATCH --mem=1000 #Memory per node in MB (see also --mem-per-cpu)
 
 #R file to run, and txt files to produce for output and errors
-R --vanilla < estimator_performance_simulation.R > logs/runScript_output_${INDEX_VAR}.txt 2> logs/runScript_errors_${INDEX_VAR}.txt
+R CMD BATCH estimator_performance_simulation.R logs/R_output_${INDEX_VAR}.txt
+
