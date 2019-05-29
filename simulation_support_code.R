@@ -213,7 +213,7 @@ run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.
                                                dependence = dependence, proptx.dependence = proptx.dependence,
                                                variable.n = variable.n, variable.p = variable.p,
                                                ATE.superpop=ATE, ICC=ICC, p.tx=p.tx, n.runs=n.runs, ... ),
-                     .id="run", .progress="text" )
+                     .id="run" ) #, .progress="text" )
   rps$subrun = paste0( rps$run, ".", rps$subrun )
   
   scat("**\n**\tTotal time elapsed:\n")
@@ -250,7 +250,7 @@ make.scenario.list = function( group = "main" ) {
   
   if ( group == "main" ) {
     scenarios = expand.grid( J = c( 80, 40, 20, 10 ),
-                             n.bar = c( 8000, 4000, 2000 ), # put in totals here
+                             n.bar = c( 8000, 4000, 2000, 1000 ), # put in totals here
                              dependence = c( 1, 0 ),
                              proptx.dependence = c( 1, 0, -1 ), 
                              variable.n = c( TRUE, FALSE ),
