@@ -13,10 +13,11 @@ group = "main"
 library( tibble )
 library( purrr )
 
+
+#### Figure out simulation scenarios to run, and if we are testing or running ####
+
 #SIZE_IMPACT_CORRELATE = FALSE
 #VARIABLE_P = FALSE
-
-
 
 # First try to get command line argument
 args = commandArgs( trailingOnly = TRUE )
@@ -33,7 +34,8 @@ if ( !exists( "index" ) ) {
 }
 
 
-if ( !exists( "index" ) || is.na( index ) ) {
+# Are we testing or no?  Set flags depending
+if ( exists( "TESTING" ) || !exists( "index" ) || is.na( index ) ) {
   cat( "WARNING: In TEST mode for simulation script\n" )
   TESTING = TRUE
   index = 0 # c( 41, 42 )
@@ -50,6 +52,8 @@ if ( !exists( "index" ) || is.na( index ) ) {
   APPROX_NUM_TRIALS_PER_RUN = 1000
 }
 
+
+##### Start setup of simulation ####
 
 make.file.name = function( index ) {
   if ( length( index ) > 1 ) {
@@ -72,6 +76,8 @@ scenarios = make.scenario.list( group=group )
 scenarios
 
 if ( TESTING ) {
+  cat( "Cutting scenario list down for testing\n" )
+  scenarios = filter( scenarios, J < 60 )
   scenarios = scenarios[1:5,]
 }
 
