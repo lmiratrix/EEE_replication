@@ -108,7 +108,7 @@ describe.data = function( df ) {
 # @return Dataframe with the estimates along with the true baseline values.
 single.MLM.trial = function( n.bar, J, tau.11.star, dependence = FALSE, proptx.dependence = FALSE, variable.n = FALSE, variable.p = FALSE,
                              ATE.superpop = 0.2, ICC = 0.20, p.tx = 0.65, n.runs = 3,
-                             just.describe.data = FALSE, ... ) {
+                             just.describe.data = FALSE, just.return.data = FALSE, ... ) {
   
   df = gen.dat.no.cov( n.bar=n.bar, 
                        J=J,
@@ -124,6 +124,10 @@ single.MLM.trial = function( n.bar, J, tau.11.star, dependence = FALSE, proptx.d
                        correlate.strength = 0.50,
                        size.ratio = 0.60
                       )
+  
+  if ( just.return.data ) {
+    return( df )
+  }
   
   if ( just.describe.data ) {
     return( describe.data( df ) )
@@ -190,7 +194,8 @@ if ( FALSE ) {
 
 
 # Run a simulation with R trials and return all the simulation runs as a large dataframe.
-run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, ATE = 0.20, ICC = 0.20, p.tx = 0.65, R = 10, n.runs=3, ID=NULL, ... ) {
+run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, ATE = 0.20, ICC = 0.20, p.tx = 0.65, R = 10, n.runs=3, 
+                         ID=NULL, .progress="none", ... ) {
   ptm = proc.time()
   
   #  n = n.bar * J
@@ -202,18 +207,21 @@ run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.
   #} else {
   #  R.adj = R
   #}
-  R.adj = R
+  #R.adj = R
   
   if ( is.null( ID ) ) {
     ID = -999
   }
   
-  scat( "Running scenario %d\n\tJ=%d\tn.bar=%d\ttau=%.2f\tATE=%.2f\tICC=%.2f\tprop tx=%.2f\tdependence=%s\tprop dep=%s\tR=%d (%d)\n", ID, J, n.bar,tau, ATE, ICC, p.tx, dependence, proptx.dependence, R.adj, R)
-  rps = plyr::rdply( R.adj,  single.MLM.trial( n.bar=n.bar, J=J, tau.11.star=tau, 
+  scat( "Running scenario %d\n\tJ=%d\tn.bar=%d\ttau=%.2f\tATE=%.2f\tICC=%.2f\tprop tx=%.2f\tdependence=%s\tprop dep=%s\tR=%d\n", 
+        ID, J, n.bar,tau, ATE, ICC, p.tx, dependence, proptx.dependence, R)
+  
+  rps = plyr::rdply( R,  single.MLM.trial( n.bar=n.bar, J=J, tau.11.star=tau, 
                                                dependence = dependence, proptx.dependence = proptx.dependence,
                                                variable.n = variable.n, variable.p = variable.p,
                                                ATE.superpop=ATE, ICC=ICC, p.tx=p.tx, n.runs=n.runs, ... ),
-                     .id="run" ) #, .progress="text" )
+                     .id="run", .progress="text" )
+  
   rps$subrun = paste0( rps$run, ".", rps$subrun )
   
   scat("**\n**\tTotal time elapsed:\n")

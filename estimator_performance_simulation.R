@@ -68,6 +68,8 @@ if ( exists( "TESTING" ) || !exists( "index" ) || is.na( index ) ) {
 }
 
 
+set.seed( index^2 + index + 1 )
+
 ##### Start setup of simulation ####
 
 make.file.name = function( index ) {
