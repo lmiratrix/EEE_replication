@@ -1,7 +1,8 @@
-
-##
-## Examine coverage of the different estimators
-##
+# ---
+# title: "Examine coverage of the different estimators"
+# author: "Miratrix, Weiss, Henderson"
+# date: "`r Sys.Date()`"
+# ---
 
 
 # Using the results from clean_simulation_results, look at coverage
@@ -21,7 +22,7 @@ theme_set( my_theme )
 if ( FALSE )  {
   # Make temp file of coverage results.
   cat( "Loading the big data file\n" )
-  load( "results/processed_simulation_results.RData" )
+  load( "../results/processed_simulation_results.RData" )
   
   head( sruns )
   
@@ -36,11 +37,11 @@ if ( FALSE )  {
   
   head( cov )
   
-  write_rds(cov, path="coverage_results.rds" )
+  write_rds(cov, path="../results/coverage_results.rds" )
 }
 
 # Load coverage results (from aggregated simulation)
-cov = read_rds("coverage_results.rds" )
+cov = read_rds("../results/coverage_results.rds" )
 
 
 
@@ -73,7 +74,7 @@ ggplot( covsub, aes( method, coverage, col=population ) ) +
   geom_hline(yintercept=90, lty=2, col="red" ) +
   coord_flip(ylim=c(80,100) ) + 
   labs( x="", y="coverage" )
-ggsave( filename="../simulation analysis writeup/figures/coverage.pdf", width=8, height=5)
+ggsave( filename="../figures/coverage.pdf", width=8, height=5)
 
 head( covsub )
 summary( covsub$coverage )
@@ -98,7 +99,7 @@ ggplot( c2, aes( method, coverage, col=population ) ) +
   geom_hline(yintercept=90, lty=2, col="red" ) +
   coord_flip(ylim=c(80,100) ) + 
   labs( x="", y="coverage" ) 
-ggsave( filename="../simulation analysis writeup/figures/coverage_nobias.pdf", width=8, height=5)
+ggsave( filename="../figures/coverage_nobias.pdf", width=8, height=5)
 
 
 
@@ -114,7 +115,8 @@ head( m2_cov )
 
 
 m2_cov = mutate( m2_cov, rel_cov = pmin( 0, 0.95 - `DB-SP-Sites` ) - pmin( 0, 0.95 - FIRC ) )
-qplot( m2_cov$rel_cov )
+qplot( m2_cov$rel_cov, binwidth = 0.2 ) +
+  labs( x = "Relative coverage of DB-SP-Sites vs FIRC (truncating for overcoverage)" )
 
 
 # Relative coverage
@@ -137,6 +139,6 @@ ggplot( m2_cov, aes( FIRC, `DB-SP-Sites`, col=J ) ) +
          legend.box = "vertical", 
          panel.border=element_rect(size=0.3, fill=NA)) +
   labs( y="Coverage of DB-SP-Sites", x= "Coverage of FIRC" ) 
-ggsave( filename="../../simulation analysis writeup/figures/coverage_FIRC_v_DB.pdf", width=8, height=5)
+ggsave( filename="../figures/coverage_FIRC_v_DB.pdf", width=8, height=5)
 
 
