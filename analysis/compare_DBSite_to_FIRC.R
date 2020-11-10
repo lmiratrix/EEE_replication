@@ -1,4 +1,3 @@
-
 # ---
 # title: "Focused Comparison of DB Site to FIRC"
 # author: "Miratrix, Weiss, Henderson"
@@ -207,7 +206,7 @@ ggplot( m2, #filter( m2 , dependence != "const" ),
                                     legend.box = "vertical", 
                                     panel.border=element_rect(size=0.3, fill=NA))
 
-ggsave( filename="compare_FIRC_v_DB.pdf", width=8, height=5)
+ggsave( filename="../figures/compare_FIRC_v_DB.pdf", width=8, height=5)
 
 
 
