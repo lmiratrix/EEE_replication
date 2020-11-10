@@ -13,9 +13,11 @@ library( blkvar )
 library( purrr )
 library( multiwayvcov )
 
+#### Utility functions #####
+
 if ( FALSE ) {
-  # for testing crashing in the simulator
-  my_compare_methods =function(... ){
+  # for testing crashing in the simulator.  This wrapper will make things crash sometimes.
+  my_compare_methods = function( ... ){
     if ( sample(5,1) == 1 ) {
       asdfadfga
     } else {
@@ -32,10 +34,11 @@ scat = function( str, ... ) {
 
 get.estimates = function( df, ... ) {
   safe_comp = safely( compare_methods )
-  ests = safe_comp( Yobs, Z, sid, data=df, ... )
+  ests = safe_comp( Yobs, Z, sid, data=df, include_block=FALSE, ... )
   if ( is.null( ests[[2]] ) ) {
     ests = ests[[1]]
-    ests = rename( ests, ATE.hat = tau,
+    ests = rename( ests, 
+                   ATE.hat = ATE_hat,
                    SE.hat = SE )
     
   } else {
@@ -47,6 +50,8 @@ get.estimates = function( df, ... ) {
   ests
 }
 
+
+
 # Reassign treatment to do finite sample inference.
 rerandomize.data = function( dat ) {
   dat = dat %>% group_by( sid ) %>%
@@ -56,9 +61,10 @@ rerandomize.data = function( dat ) {
 }
 
 
+##### Code to explore scenarios and sample datasets #####
 
-
-
+# Utility function to describe a given data set to explore the data generation
+# process
 describe.data = function( df ) {
   
   tau.S = attr( df, "tau.S")
@@ -103,14 +109,69 @@ describe.data = function( df ) {
 }
 
 
-# Generate a multisite trial, estimate ATE using all our methods, and then also
-# calculate the true ATE (person and site weighted).
+
+# Testing code
+if ( FALSE ) {
+  library( tidyverse )
+  
+  df = generate_multilevel_data_no_cov( n.bar=200, J=50,
+                                        tau.11.star = 0.1^2,
+                                        ICC = 0.20,
+                                        p = 0.70,
+                                        variable.n = TRUE,
+                                        variable.p = TRUE,
+                                        size.impact.correlate = TRUE,
+                                        proptx.impact.correlate = TRUE,
+                                        finite.model = FALSE )
+  tau.S = attr( df, "tau.S")
+  tau.S    
+  
+  sites = df %>% group_by( sid ) %>% 
+    summarise( n = n(),
+               p.Z = mean( Z ),
+               ATE.hat = mean( Yobs[Z==1] ) - mean( Yobs[Z==0] ),
+               .groups = "drop")
+  
+  head( sites )
+  
+  qplot( sites$n, binwidth=10 )
+  summary( sites$n )
+  qplot( sites$p.Z, binwidth=0.025 )
+  summary( sites$p.Z )
+  qplot( sites$n, sites$ATE.hat )
+  cor( sites$n, sites$ATE.hat )
+  
+  qplot( sites$p.Z, sites$ATE.hat )
+  cor( sites$p.Z, sites$ATE.hat )
+
+  
+  head( df )  
+  df = rerandomize_data(df)
+  head( df )
+  
+  describe.data(df)
+  describe_data(df)  
+  
+  
+  get.estimates(df)
+}
+
+
+##### Simulation code #####
+
+# Run a single round of simulation.
+#
+# Generate a multisite trial, and then repeatidly rerandomize the fixed dataset
+# n.runs times, each time estimating the  ATE using all our methods.  It also
+# calculates the true finite-sample ATE (person and site weighted).
+#
 # @return Dataframe with the estimates along with the true baseline values.
-single.MLM.trial = function( n.bar, J, tau.11.star, dependence = FALSE, proptx.dependence = FALSE, variable.n = FALSE, variable.p = FALSE,
+single.MLM.trial = function( n.bar, J, tau.11.star, dependence = FALSE, 
+                             proptx.dependence = FALSE, variable.n = FALSE, variable.p = FALSE,
                              ATE.superpop = 0.2, ICC = 0.20, p.tx = 0.65, n.runs = 3,
                              just.describe.data = FALSE, just.return.data = FALSE, ... ) {
   
-  df = gen.dat.no.cov( n.bar=n.bar, 
+  df = generate_multilevel_data_no_cov( n.bar=n.bar, 
                        J=J,
                        tau.11.star = tau.11.star,
                        gamma.10 = ATE.superpop,
@@ -135,17 +196,20 @@ single.MLM.trial = function( n.bar, J, tau.11.star, dependence = FALSE, proptx.d
   
   tau.S = attr( df, "tau.S")
   
+  # Calculate true finite sample estimands
   params = df %>% group_by( sid ) %>%
     summarise( ATE = mean( Y1 ) - mean( Y0 ),
-               n = n() )
+               n = n(), .groups="drop" )
   ATE.person = with( df, mean( Y1 - Y0 ) )
   ATE.site = mean( params$ATE )
-  
+
+  # Do finite-sample simulation, rerandomizing n.runs times.  
   ests = plyr::rdply( n.runs, {
     df = rerandomize.data( df )
     get.estimates( df, ... ) 
   }, .id="subrun" )
   
+  # Gather results and ship!
   ests = mutate( ests,
                  ATE.finite.person=ATE.person, 
                  ATE.finite.site=ATE.site )
@@ -154,47 +218,20 @@ single.MLM.trial = function( n.bar, J, tau.11.star, dependence = FALSE, proptx.d
 
 
 
-# Testing code
+# Test the simulation code
 if ( FALSE ) {
-  df = gen.dat.no.cov( n.bar=200, J=30,
-                       tau.11.star = 0.1^2,
-                       ICC = 0.20,
-                       p = 0.70,
-                       variable.n = TRUE,
-                       variable.p = TRUE,
-                       size.impact.correlate = TRUE,
-                       proptx.impact.correlate = TRUE,
-                       finite.model = FALSE )
-  tau.S = attr( df, "tau.S")
-  tau.S    
   
-  sites = df %>% group_by( sid ) %>% 
-    summarise( n = n(),
-               p.Z = mean( Z ),
-               ATE.hat = mean( Yobs[Z==1] ) - mean( Yobs[Z==0] ) )
-  
-  head( sites )
-  qplot( sites$n )
-  summary( sites$n )
-  qplot( sites$p.Z )
-  summary( sites$p.Z )
-  qplot( sites$n, sites$ATE.hat )
-  cor( sites$n, sites$ATE.hat )
-  
-  qplot( sites$p.Z, sites$ATE.hat )
-  cor( sites$p.Z, sites$ATE.hat )
-  
-  rst = single.MLM.trial( 20, 10, 0.2^2, dependence = TRUE, proptx.dependence = TRUE )
+  rst = single.MLM.trial( 20, 10, 0.2^2, variable.n = TRUE, variable.p = TRUE,
+                          dependence = TRUE, proptx.dependence = TRUE )
   head( rst )
   table( rst$subrun )
+  
 }
-
-#single.MLM.trial( 20, 10, 0.2^2 )
-
 
 
 # Run a simulation with R trials and return all the simulation runs as a large dataframe.
-run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, ATE = 0.20, ICC = 0.20, p.tx = 0.65, R = 10, n.runs=3, 
+run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.n, variable.p, 
+                         ATE = 0.20, ICC = 0.20, p.tx = 0.65, R = 10, n.runs=3, 
                          ID=NULL, .progress="none", ... ) {
   ptm = proc.time()
   
@@ -236,16 +273,17 @@ run.scenario = function( J, n.bar, tau, dependence, proptx.dependence, variable.
 
 # Testing run.scenario()
 if ( FALSE ) {
-  rr = run.scenario( J = 4, n.bar = 16, tau = 0.3^2, dependence=TRUE, proptx.dependence = TRUE, 
+  rr = run.scenario( J = 4, n.bar = 16, tau = 0.3^2, dependence=TRUE, 
+                     proptx.dependence = TRUE, 
                      variable.n = TRUE, variable.p = TRUE,
                      ATE = 0.2, R = 10 )
   head( rr )  
   table( rr$run )
   table(  table( rr$run ) )
   table(  table( rr$subrun ) )
-  tt = table( rr$subrun )
+  tt = sort( table( rr$subrun ) )
   tt
-  tt[ tt < 10 ]
+
   filter( rr, subrun %in% c( "1.2", "4.1", "4.2", "2.1" ) )
   
 }
@@ -267,7 +305,7 @@ make.scenario.list = function( group = "main" ) {
                              tau = c( 0, 0.1, 0.20 )^2,
                              p.tx = 0.65,
                              ICC = 0.20 )
-  } else if ( simstudy == "large" ) {
+  } else if ( simstudy == "initial" ) {
     scenarios = expand.grid( J = c( 80, 40, 20 ),
                              n.bar = c( 8000, 4000, 2000 ), # put in totals here
                              dependence = c( 1, 0 ),
@@ -278,11 +316,13 @@ make.scenario.list = function( group = "main" ) {
                              tau = c( 0, 0.1, 0.20 )^2,
                              p.tx = 0.70,
                              ICC = 0.60 )
+  } else {
+    error( "No defined group in make.scenario.list" )
   }
   
   nrow( scenarios )
   
-  # drop redundant scenarios (dependence irrelevant if quantaty not varying)
+  # drop redundant scenarios (dependence irrelevant if quantity not varying)
   scenarios = filter( scenarios, (variable.n == TRUE) | (dependence == 0) )
   scenarios = filter( scenarios, (variable.p == TRUE) | (proptx.dependence == 0) )
   nrow( scenarios )
@@ -299,7 +339,7 @@ make.scenario.list = function( group = "main" ) {
   
   # convert n.bar from totals to people per site
   scenarios = mutate( scenarios, n.bar = round( n.bar / J ) )
-  scenarios = as.tibble( scenarios )
+  scenarios = as_tibble( scenarios )
   scenarios
   nrow( scenarios )
   
@@ -309,18 +349,23 @@ make.scenario.list = function( group = "main" ) {
 }
 
 
+# Given an Id 'index' return the charactaristics of the given generated scenario.
+# 
+# This is so we don't have to store all the factors of the experiment in all the dataframes.
 get.scenario.by.id = function( index, group = "main" ) {
   scenarios = make.scenario.list( group=group )
   scenarios[ index, ]
 }
 
 
-
+# Testing code
 if ( FALSE ) {
   sc = make.scenario.list()
   nrow( sc )
   head( sc )
-  table( sc$variable.n, sc$variable.p )
+  table( var_n = sc$variable.n, var_p = sc$variable.p )
+  
+  get.scenario.by.id(12)
 }
 
 

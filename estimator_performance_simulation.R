@@ -12,7 +12,9 @@ rm(list=ls())
 
 source( "simulation_support_code.R" )
 
+# Which set of simulation scenarios should we run?
 group = "main"
+
 
 library( tibble )
 library( purrr )
@@ -68,7 +70,10 @@ if ( exists( "TESTING" ) || !exists( "index" ) || is.na( index ) ) {
 }
 
 
+# Set seed based on simulation index
 set.seed( index^2 + index + 1 )
+
+
 
 ##### Start setup of simulation ####
 
