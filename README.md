@@ -41,7 +41,7 @@ source( "prepare simulation results/prepare_aggregate_results.R" )
 This final file works with the following data frames:
 
  * scenarios (list of scenario characteristics)
- * simdata (the raw data)
+ * simdata (the raw data; this can be a very big file)
  * sruns (aggregated data by method and simulation run)
 
 
