@@ -1,6 +1,6 @@
 # Multisite ATE Estimator Simulation Study
 
-This is the code for the simulation study discussed in Miratrix & Weiss "Estimands, Estimators, and Estimates."
+This is the code for the simulation study discussed in Miratrix & Weiss "Estimands, Estimators, and Estimates." This code heavily uses the `blkvar` package, also on GitHub (see https://github.com/lmiratrix/blkvar) that implements all the methods in easy-to-use functions and also provides code for generating fake multisite experiments.
 
 
 ## Running the simulation
